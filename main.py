@@ -10,14 +10,32 @@ from nessie.helper_funcs import create_density_function
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
 
+from luminosity_function import build_integrated_lf
 
 cosmo = FlatCosmology(0.7, 0.3)
 astropy_cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
 OVERFACTOR = 400  # The factor the randoms were expanded.
 B0, R0 = 0.06, 32
+APPARENT_MAG_LIM = 19.65
+AB_CUT = -10
+MASS_A = 10
+MASS_FUNC_PARAMS = np.array([2., 17.9, 1.5])
+LUM_B = 1.04
+LUM_FUNC_PARAMS = np.array([0.65, -0.5, 0.22])
+SUN_MAG = 4.67
 
+def functional_correction(multiplicity: np.ndarray[float], median_redshift: np.ndarray[float], params: np.ndarray[float]) -> np.ndarray[float]:
+    """
+    This is the general form of the plane equation used in equations 19 and 23 in R11.
 
-def convert_jansky_to_ab(janksy_array: np.ndarray[float]) -> np.ndarray[float]:
+    multiplicity of the group
+    median_redshift of the group
+
+    Returns the functional correction to be applied to the mass proxy.
+    """
+    return params[0] + params[1] * (multiplicity**(-0.5)) + params[2]*(median_redshift**(-0.5))
+
+def convert_jansky_to_apparent(janksy_array: np.ndarray[float]) -> np.ndarray[float]:
     """
     Converts the flux in Jansky into AB apparent magnitudes.
     """
@@ -66,7 +84,7 @@ class Field:
 
     def __post_init__(self):
         obs_df = self.input_data_frame[self.input_data_frame["NQ"] > 2]
-        obs_df["apparent_mags"] = convert_jansky_to_ab(obs_df["flux_rl"])
+        obs_df["apparent_mags"] = convert_jansky_to_apparent(obs_df["flux_rl"])
         obs_df["absolute_mags"] = (
             obs_df["apparent_mags"]
             - cosmo.dist_mod(obs_df["Z"])
@@ -97,6 +115,32 @@ class Field:
 
         self.redshift_catalog = redcat
         self.obs_df = obs_df
+
+    def get_group_dmu(self) -> pd.DataFrame:
+        """Creates the GAMA DMU for the groups."""
+        vel_errors = np.repeat(50, len(self.obs_df))
+        properties = pd.DataFrame(self.redshift_catalog.calculate_group_table(self.obs_df['absolute_mags'], vel_errors))
+        group_ob_limit = APPARENT_MAG_LIM - cosmo.dist_mod(properties['median_redshift'])
+        int_function = build_integrated_lf()
+        lum_factor = int_function(AB_CUT)/int_function(group_ob_limit)
+        properties['lum_corrected_mass'] = properties['mass_proxy'] * lum_factor
+        properties['lum_corrected_flux'] = properties['flux_proxies'] * lum_factor
+        properties['MassA'] = properties['lum_corrected_mass'] * MASS_A
+        properties['LumB'] = properties['lum_corrected_flux'] * LUM_B * 10**(0.4 * SUN_MAG)
+        properties['MassAfunc'] = properties['lum_corrected_mass'] * functional_correction(properties['multiplicity'], properties['median_redshift'], MASS_FUNC_PARAMS)
+        properties['LumBfunc'] = properties['lum_corrected_flux'] * functional_correction(properties['multiplicity'], properties['median_redshift'], LUM_FUNC_PARAMS)
+        return properties
+
+    def get_pair_dmu(self) -> pd.DataFrame:
+        """Creates the GAMA DMU for the pairs."""
+        pair_properties = pd.DataFrame(self.redshift_catalog.calculate_pair_table(self.obs_df['absolute_mags']))
+        return pair_properties
+
+    def get_galaxy_dmu(self) -> pd.DataFrame:
+        """Creates the GAMA DMU for the galaxies."""
+        new_dmu = self.obs_df
+        group_ids = self.redshift_catalog.group_ids 
+
 
 
 if __name__ == "__main__":
