@@ -136,7 +136,7 @@ class Field:
         new_dmu['group_ids'] = np.array(self.redshift_catalog.group_ids + GROUP_ID_OFFSET[self.name]).astype(int)
         new_dmu.loc[new_dmu["group_ids"] == 99999, "group_ids"] = 0 # zero for ungrouped.
         return new_dmu
-
+ 
 if __name__ == "__main__":
     INPUT_CAT = "gama_catalogs/gama_input_galaxies.csv"
     g09_input, g12_input, g15_input, g23_input = read_in_input_cats(INPUT_CAT)
