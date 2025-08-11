@@ -9,11 +9,30 @@ from nessie import RedshiftCatalog
 from nessie.helper_funcs import create_density_function
 import astropy.units as u
 
-from config import cosmo, astropy_cosmo, GROUP_ID_OFFSET, APPARENT_MAG_LIM, OVERFACTOR, B0, R0, SUN_MAG, MASS_A, MASS_FUNC_PARAMS, LUM_B, LUM_FUNC_PARAMS, AB_CUT
+from config import (
+    cosmo,
+    astropy_cosmo,
+    GROUP_ID_OFFSET,
+    APPARENT_MAG_LIM,
+    OVERFACTOR,
+    B0,
+    R0,
+    SUN_MAG,
+    MASS_A,
+    MASS_FUNC_PARAMS,
+    LUM_B,
+    LUM_FUNC_PARAMS,
+    AB_CUT,
+)
 from luminosity_function import build_integrated_lf
 from separations import add_separation_metrics
 
-def functional_correction(multiplicity: np.ndarray[float], median_redshift: np.ndarray[float], params: np.ndarray[float]) -> np.ndarray[float]:
+
+def functional_correction(
+    multiplicity: np.ndarray[float],
+    median_redshift: np.ndarray[float],
+    params: np.ndarray[float],
+) -> np.ndarray[float]:
     """
     This is the general form of the plane equation used in equations 19 and 23 in R11.
 
@@ -22,7 +41,12 @@ def functional_correction(multiplicity: np.ndarray[float], median_redshift: np.n
 
     Returns the functional correction to be applied to the mass proxy.
     """
-    return params[0] + params[1] * (multiplicity**(-0.5)) + params[2]*(median_redshift**(-0.5))
+    return (
+        params[0]
+        + params[1] * (multiplicity ** (-0.5))
+        + params[2] * (median_redshift ** (-0.5))
+    )
+
 
 def convert_jansky_to_apparent(janksy_array: np.ndarray[float]) -> np.ndarray[float]:
     """
@@ -108,35 +132,68 @@ class Field:
     def get_group_dmu(self) -> pd.DataFrame:
         """Creates the GAMA DMU for the groups."""
         vel_errors = np.repeat(50, len(self.obs_df))
-        properties = pd.DataFrame(self.redshift_catalog.calculate_group_table(self.obs_df['absolute_mags'], vel_errors))
-        group_ob_limit = APPARENT_MAG_LIM - cosmo.dist_mod(properties['median_redshift'])
+        properties = pd.DataFrame(
+            self.redshift_catalog.calculate_group_table(
+                self.obs_df["absolute_mags"], vel_errors
+            )
+        )
+        group_ob_limit = APPARENT_MAG_LIM - cosmo.dist_mod(
+            properties["median_redshift"]
+        )
         int_function = build_integrated_lf()
-        lum_factor = int_function(AB_CUT)/int_function(group_ob_limit)
-        properties['lum_corrected_mass'] = properties['mass_proxy'] * lum_factor
-        properties['lum_corrected_flux'] = properties['flux_proxies'] * lum_factor
-        properties['MassA'] = properties['lum_corrected_mass'] * MASS_A
-        properties['LumB'] = properties['lum_corrected_flux'] * LUM_B * 10**(0.4 * SUN_MAG)
-        properties['MassAfunc'] = properties['lum_corrected_mass'] * functional_correction(properties['multiplicity'], properties['median_redshift'], MASS_FUNC_PARAMS)
-        properties['LumBfunc'] = properties['lum_corrected_flux'] * functional_correction(properties['multiplicity'], properties['median_redshift'], LUM_FUNC_PARAMS)
-        properties['group_id'] = np.array(properties['group_id'] + GROUP_ID_OFFSET[self.name]).astype(int)
-        properties['iter_uber_id'] = np.array(self.obs_df['UberID'])[np.array(properties['iter_idx'])]
-        properties['bcg_uber_id'] = np.array(self.obs_df['UberID'])[np.array(properties['bcg_idxs'])]
+        lum_factor = int_function(AB_CUT) / int_function(group_ob_limit)
+        properties["lum_corrected_mass"] = properties["mass_proxy"] * lum_factor
+        properties["lum_corrected_flux"] = properties["flux_proxies"] * lum_factor
+        properties["MassA"] = properties["lum_corrected_mass"] * MASS_A
+        properties["LumB"] = (
+            properties["lum_corrected_flux"] * LUM_B * 10 ** (0.4 * SUN_MAG)
+        )
+        properties["MassAfunc"] = properties[
+            "lum_corrected_mass"
+        ] * functional_correction(
+            properties["multiplicity"], properties["median_redshift"], MASS_FUNC_PARAMS
+        )
+        properties["LumBfunc"] = properties[
+            "lum_corrected_flux"
+        ] * functional_correction(
+            properties["multiplicity"], properties["median_redshift"], LUM_FUNC_PARAMS
+        )
+        properties["group_id"] = np.array(
+            properties["group_id"] + GROUP_ID_OFFSET[self.name]
+        ).astype(int)
+        properties["iter_uber_id"] = np.array(self.obs_df["UberID"])[
+            np.array(properties["iter_idx"])
+        ]
+        properties["bcg_uber_id"] = np.array(self.obs_df["UberID"])[
+            np.array(properties["bcg_idxs"])
+        ]
         return properties
 
     def get_pair_dmu(self) -> pd.DataFrame:
         """Creates the GAMA DMU for the pairs."""
-        pair_properties = pd.DataFrame(self.redshift_catalog.calculate_pair_table(self.obs_df['absolute_mags']))
-        pair_properties['uber_id_1'] = np.array(self.obs_df['UberID'])[np.array(pair_properties['idx_1'])]
-        pair_properties['uber_id_2'] = np.array(self.obs_df['UberID'])[np.array(pair_properties['idx_2'])]
+        pair_properties = pd.DataFrame(
+            self.redshift_catalog.calculate_pair_table(self.obs_df["absolute_mags"])
+        )
+        pair_properties["uber_id_1"] = np.array(self.obs_df["UberID"])[
+            np.array(pair_properties["idx_1"])
+        ]
+        pair_properties["uber_id_2"] = np.array(self.obs_df["UberID"])[
+            np.array(pair_properties["idx_2"])
+        ]
         return pair_properties
 
     def get_galaxy_dmu(self) -> pd.DataFrame:
         """Creates the GAMA DMU for the galaxies."""
         new_dmu = self.obs_df.copy()
-        new_dmu['group_ids'] = np.array(self.redshift_catalog.group_ids + GROUP_ID_OFFSET[self.name]).astype(int)
-        new_dmu.loc[new_dmu["group_ids"] == 99999, "group_ids"] = 0 # zero for ungrouped.
+        new_dmu["group_ids"] = np.array(
+            self.redshift_catalog.group_ids + GROUP_ID_OFFSET[self.name]
+        ).astype(int)
+        new_dmu.loc[new_dmu["group_ids"] == 99999, "group_ids"] = (
+            0  # zero for ungrouped.
+        )
         return new_dmu
- 
+
+
 if __name__ == "__main__":
     INPUT_CAT = "gama_catalogs/gama_input_galaxies.csv"
     g09_input, g12_input, g15_input, g23_input = read_in_input_cats(INPUT_CAT)
@@ -158,5 +215,5 @@ if __name__ == "__main__":
     pairs = g09.get_pair_dmu()
     galaxies = g09.get_galaxy_dmu()
 
-    print('Adding separation metrics.')
+    print("Adding separation metrics.")
     galaxies = add_separation_metrics(galaxies, groups)
