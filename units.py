@@ -1,6 +1,7 @@
 """
-Data structures storing the UCD and Units of all the values.
+Data structures storing names and schema details for the GAMA DR4 Group Cat.
 """
+
 from dataclasses import dataclass
 
 @dataclass
@@ -10,8 +11,7 @@ class Unit:
     ucd: str
     description: str
 
-
-remames_groups = {
+renames_groups = {
     "group_id": "GroupID",
     "multiplicity": "Nfof",
     "iter_ra": "IterCenRA",
@@ -21,9 +21,9 @@ remames_groups = {
     "median_redshift": "Zfof",
     "r50": "Rad50",
     "r100": "Rad100",
-    "rsimga": "Rad1Sig",
-    "velocity_dispersion_gapper": "VelDisp",
-    "velocity_dispersion_gaqp_err": "VelDispErr",
+    "rsigma": "Rad1Sig",
+    "velocity_dispersion_gap": "VelDisp",
+    "velocity_dispersion_gap_err": "VelDispErr",
     "lum_corrected_mass": "MassProxy",
     "lum_corrected_flux": "TotFluxProxy",
     "bcg_uber_id": "BCGUberID",
@@ -33,10 +33,7 @@ remames_groups = {
     "center_of_light_ras": "CenRA",
     "center_of_light_decs": "CenDec",
     "total_absolute_mag": "TotRmag",
-    "MassA": "MassA",
-    "LumB": "LumB",
-    "MassAfunc": "MassAfunc",
-    "LumBfunc": "LumBfunc"
+    "field": "GAMARegion"
 }
 
 renames_pairs = {
@@ -49,17 +46,25 @@ renames_pairs = {
     'total_absolute_mag': "MagSum",
     'uber_id_1': "UberID1",
     'uber_id_2': "UberID2",
+    "field": "GAMARegion",
 }
 
-rename_galaxies = {
-    'UberID',
-    'RAcen',
-    'Deccen',
-    'Z',
-    'flux_rl',
-    'NQ',
-    'apparent_mags': Unit("mag", ""),
-    'absolute_mags',
+renames_galaxies = {
+    "group_ids": "GroupID",
+    "absolute_mags": "AbsoluteMagR",
+    "apparent_mags": "ApparentMagR",
+    "field": "GAMARegion"
+}
+
+galaxy_schema = {
+    'UberID': Unit("-", "meta.id;meta.main", "Unique GAMA III ID of object"),
+    'RAcen': Unit("deg", "pos.eq.ra", "Right Ascension of flux-weighted centre (ICRS)"),
+    'Deccen': Unit("deg", "pos.eq.dec", "Declination of flux-weighted centre (ICRS)"),
+    'Z': Unit("-", "src.redshift", "Spectroscopic redshift"),
+    'flux_rl': Unit("Jy", "phot.flux.density;em.opt.R", "Total flux (r band) - using global sky subtraction"),
+    'NQ': Unit("-", "meta.code.qual;src.redshift", "Normalised redshift quality"),
+    'ApparentMagR': Unit("mag", "phot.mag", "Apparent magnitude derived using the r-band flux[Jy], with local sky subtraction 'flux_rl' (m_r = 2.5 * (23 - np.log10(flux_rl)) - 48.6)"),
+    'AbsoluteMagR': Unit("mag -5log(h)", "phot.mag", "the k+e corrected absolute magnitude derived from the apparent magnitude using the distance modulus assuming a 737 cosmology."),
     'GroupID': Unit("-", "meta.id", "GroupID for this galaxy in G3CFoFGroup, 0 is un-grouped"),
     'SepBCG': Unit("arcsec", "phys.angSize", "	Projected angular separation of the galaxy to the RA and Dec of the group `BCG` coordinates"),
     'AngSepBCG': Unit("Mpc/h", "phys.size.radius", "	Projected angular size distance (comoving/(1+z)) separation of the galaxy to the RA and Dec of the group `BCG` coordinates"),
@@ -72,10 +77,11 @@ rename_galaxies = {
     'SepCen': Unit("arcsec", "phs.angSize", "Projected angular separation of the galaxy to the RA and Dec of the group `Cen` coordinates"),
     'AngSepCen': Unit("Mpc/h", "phys.size.radius", "Projected angular size distance (comoving/(1+z)) separation of the galaxy to the RA and Dec of the group `Cen` coordinates"),
     'CoSepCen': Unit("Mpc/h", "phys.size.radius", "Projected comoving distance separation of the galaxy to the RA and Dec of the group `Cen` coordinates"),
-    'RankCen': Unit("-", "-", "Relative rank of the galaxy to the RA and Dec of the group `Cen` coordinates, where 1 indicates closest and 2 second closest etc")
+    'RankCen': Unit("-", "-", "Relative rank of the galaxy to the RA and Dec of the group `Cen` coordinates, where 1 indicates closest and 2 second closest etc"),
+    'GamaRegion': Unit("-", "-", "The GAMA region the galaxy is in."),
 }
 
-group_unit = {
+group_schema = {
     "GroupID": Unit("-", "-", "Unique group ID"),
     "Nfof": Unit("-", "-", "Group multiplicity"),
     "IterCenRA": Unit("deg", "pos.eq.ra;meta.main", "RA of the iterative central galaxy (J2000)"),
@@ -101,9 +107,11 @@ group_unit = {
     "LumB": Unit("Lsun/h^2", "phys.luminosity", "TotFluxProxy times the global B factor required to get a median unbaised r-band luminosity estimate (B=1.04, see Robotham et al. 2011 section 4.4 for details)"),
     "MassAfunc": Unit("Msun/h", "phys.mass", "Mass proxy times the functional A factor which is a function of Nfof and IterCenZ (see Robotham et al. 2011 section 4.3 for details)"),
     "LumBfunc": Unit("Lsun/h^2", "phys.luminosity", "TotFluxProxy times the functional B factor which is a function of Nfof and IterCenZ (see Robotham et al. 2011 section 4.4 for details)"),
+    'GamaRegion': Unit("-", "-", "The GAMA region the galaxy is in.")
 }
 
-pair_unit = {
+
+pair_schema = {
     "PairID": Unit("-", "meta.id;meta.main", "Unique paid ID (Same as GroupID)"),
     "SepProjAng": Unit("kpc/h", "pos.distance", "Physical projected separation between galaxy 1 and galaxy 2"),
     "SepVel": Unit("km/s", "phys.veloc", "Velocity separation of galaxy 1 and galaxy 2"),
@@ -113,4 +121,5 @@ pair_unit = {
     "MagSum": Unit("mag", "phot.mag", "Total r-band (petro) apparent magnitude of the pair"),
     "UberID1": Unit("-", "meta.id", "UberID of galaxy 2 in G3CGal"),
     "UberID2": Unit("-", "meta.id", "UberID of galaxy 2 in G3CGal"),
+    'GamaRegion': Unit("-", "-", "The GAMA region the galaxy is in.")
 }
