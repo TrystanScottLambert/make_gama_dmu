@@ -3,12 +3,21 @@ Main script for building the GAMA Group Catalog
 """
 
 from dataclasses import dataclass
+from enum import Enum
 import pandas as pd
 import numpy as np
 from nessie import RedshiftCatalog
 from nessie.helper_funcs import create_density_function
 import astropy.units as u
 
+from units import (
+    galaxy_schema,
+    group_schema,
+    pair_schema,
+    renames_galaxies,
+    renames_pairs,
+    renames_groups,
+)
 from config import (
     cosmo,
     astropy_cosmo,
@@ -54,6 +63,28 @@ def convert_jansky_to_apparent(janksy_array: np.ndarray[float]) -> np.ndarray[fl
     """
     return 2.5 * (23 - np.log10(janksy_array)) - 48.6
 
+class GamaField(Enum):
+    """String representation of the GAMA fields"""
+    G09 = 'g09'
+    G12 = 'g12'
+    G15 = 'g15'
+    G23 = 'g23'
+
+def what_gama_field(ra_array: np.ndarray[float]) -> str:
+    """
+    Takes an array of Ra and returns which gama field the ra is in.
+    """
+    fields = []
+    for ra in ra_array:
+        if ra < 150:
+            fields.append(GamaField.G09.value)
+        if (ra > 150) & (ra < 200):
+            fields.append(GamaField.G12.value)
+        if (ra > 200) & (ra < 250):
+            fields.append(GamaField.G15.value)
+        if ra > 300:
+            fields.append(GamaField.G23.value)
+    return np.array(fields)
 
 def read_in_input_cats(
     catalog_name: str,
@@ -167,6 +198,7 @@ class Field:
         properties["bcg_uber_id"] = np.array(self.obs_df["UberID"])[
             np.array(properties["bcg_idxs"])
         ]
+        properties["field"] = what_gama_field(properties["iter_ra"])
         return properties
 
     def get_pair_dmu(self) -> pd.DataFrame:
@@ -180,6 +212,7 @@ class Field:
         pair_properties["uber_id_2"] = np.array(self.obs_df["UberID"])[
             np.array(pair_properties["idx_2"])
         ]
+        pair_properties['field'] = what_gama_field(pair_properties['ra_bar'])
         return pair_properties
 
     def get_galaxy_dmu(self) -> pd.DataFrame:
@@ -191,8 +224,30 @@ class Field:
         new_dmu.loc[new_dmu["group_ids"] == 99999, "group_ids"] = (
             0  # zero for ungrouped.
         )
+        new_dmu["field"] = what_gama_field(new_dmu['RAcen'])
         return new_dmu
 
+
+def rename_and_select(final_dataframe: pd.DataFrame, schema_columns: list[str], renames: dict[str, str]) -> pd.DataFrame:
+    """
+    Renames the dataframe to match the schema columns and only selects properties that are in the
+    GAMA schema list.
+    """
+    renamed_dataframe = final_dataframe.rename(columns=renames)
+    return renamed_dataframe[schema_columns]
+
+def run_all_fields(fields = list[Field]) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Builds the combined group, galaxy and pair cats.
+    """
+    group_dmus = []
+    galaxy_dmus = []
+    pair_dmus = []
+    for field in fields:
+        group_dmus.append(field.get_group_dmu())
+        pair_dmus.append(field.get_pair_dmu())
+        galaxy_dmus.append(field.get_galaxy_dmu())
+    return pd.concat(group_dmus), pd.concat(pair_dmus), pd.concat(galaxy_dmus)
 
 if __name__ == "__main__":
     INPUT_CAT = "gama_catalogs/gama_input_galaxies.csv"
@@ -211,9 +266,12 @@ if __name__ == "__main__":
     g15 = Field(g15_input, fractional_areas["g15"], "g15")
     g23 = Field(g23_input, fractional_areas["g23"], "g23")
 
-    groups = g09.get_group_dmu()
-    pairs = g09.get_pair_dmu()
-    galaxies = g09.get_galaxy_dmu()
+    groups, pairs, galaxies = run_all_fields([g09, g12, g15, g23])
 
     print("Adding separation metrics.")
     galaxies = add_separation_metrics(galaxies, groups)
+
+    print("Renmaing and Selecting Columns")
+    groups_dmu = rename_and_select(groups, group_schema.keys(), renames_groups)
+    galaxies_dmu = rename_and_select(galaxies, galaxy_schema.keys(), renames_galaxies)
+    pairs_dmu = rename_and_select(pairs, pair_schema.keys(), renames_pairs)
