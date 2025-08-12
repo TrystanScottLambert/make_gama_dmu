@@ -1,0 +1,32 @@
+# GroupFinding
+# GalaxyDMU
+# v11
+# 2025-08-12
+# Trystan Lambert <trystan.lambert@uwa.edu.au>
+#
+# Galaxy groups for the G09, G12, G15, and G23 regions.
+# Groups built using Nessie and new GAMA III photometry based on profound (gkInputCat)#
+# See Lambert (2025) for more details.
+#
+UberID         1   -             meta.id;meta.main            Unique GAMA III ID of object                                                                                                            
+RAcen          2   deg           pos.eq.ra                    Right Ascension of flux-weighted centre (ICRS)                                                                                          
+Deccen         3   deg           pos.eq.dec                   Declination of flux-weighted centre (ICRS)                                                                                              
+Z              4   -             src.redshift                 Spectroscopic redshift                                                                                                                  
+flux_rl        5   Jy            phot.flux.density;em.opt.R   Total flux (r band) - using global sky subtraction                                                                                      
+NQ             6   -             meta.code.qual;src.redshift  Normalised redshift quality                                                                                                             
+ApparentMagR   7   mag           phot.mag                     Apparent magnitude derived using the r-band flux[Jy], with local sky subtraction 'flux_rl' (m_r = 2.5 * (23 - np.log10(flux_rl)) - 48.6)
+AbsoluteMagR   8   mag -5log(h)  phot.mag                     the k+e corrected absolute magnitude derived from the apparent magnitude using the distance modulus assuming a 737 cosmology.           
+GroupID        9   -             meta.id                      GroupID for this galaxy in G3CFoFGroup, 0 is un-grouped                                                                                 
+SepBCG         10  arcsec        phys.angSize                 Projected angular separation of the galaxy to the RA and Dec of the group `BCG` coordinates                                             
+AngSepBCG      11  Mpc/h         phys.size.radius             Projected angular size distance (comoving/(1+z)) separation of the galaxy to the RA and Dec of the group `BCG` coordinates              
+CoSepBCG       12  Mpc/h         phys.size.radius             Projected comoving distance separation of the galaxy to the RA and Dec of the group `BCG` coordinates                                   
+RankBCG        13  -             -                            Relative rank of the galaxy to the RA and Dec of the group `BCG` coordinates, where 1 indicates closest and 2 second closest etc        
+SepIterCen     14  arcsec        phys.angSize                 Projected angular separation of the galaxy to the RA and Dec of the group `IterCen` coordinates                                         
+AngSepIterCen  15  Mpc/h         phys.size.radius             Projected angular size distance (comoving/(1+z)) separation of the galaxy to the RA and Dec of the group `IterCen` coordinates          
+CoSepIterCen   16  Mpc/h         phys.size.radius             Projected comoving distance separation of the galaxy to the RA and Dec of the group `IterCen` coordinates                               
+RankIterCen    17  -             -                            Relative rank of the galaxy to the RA and Dec of the group `IterCen` coordinates, where 1 indicates closest and 2 second closest etc    
+SepCen         18  arcsec        phs.angSize                  Projected angular separation of the galaxy to the RA and Dec of the group `Cen` coordinates                                             
+AngSepCen      19  Mpc/h         phys.size.radius             Projected angular size distance (comoving/(1+z)) separation of the galaxy to the RA and Dec of the group `Cen` coordinates              
+CoSepCen       20  Mpc/h         phys.size.radius             Projected comoving distance separation of the galaxy to the RA and Dec of the group `Cen` coordinates                                   
+RankCen        21  -             -                            Relative rank of the galaxy to the RA and Dec of the group `Cen` coordinates, where 1 indicates closest and 2 second closest etc        
+GAMARegion     22  -             -                            The GAMA region the galaxy is in.                                                                                                       

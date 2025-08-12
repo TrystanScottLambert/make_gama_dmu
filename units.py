@@ -3,6 +3,9 @@ Data structures storing names and schema details for the GAMA DR4 Group Cat.
 """
 
 from dataclasses import dataclass
+from datetime import date
+
+from config import VERSION, NAME, EMAIL, ABS
 
 @dataclass
 class Unit:
@@ -66,8 +69,8 @@ galaxy_schema = {
     'ApparentMagR': Unit("mag", "phot.mag", "Apparent magnitude derived using the r-band flux[Jy], with local sky subtraction 'flux_rl' (m_r = 2.5 * (23 - np.log10(flux_rl)) - 48.6)"),
     'AbsoluteMagR': Unit("mag -5log(h)", "phot.mag", "the k+e corrected absolute magnitude derived from the apparent magnitude using the distance modulus assuming a 737 cosmology."),
     'GroupID': Unit("-", "meta.id", "GroupID for this galaxy in G3CFoFGroup, 0 is un-grouped"),
-    'SepBCG': Unit("arcsec", "phys.angSize", "	Projected angular separation of the galaxy to the RA and Dec of the group `BCG` coordinates"),
-    'AngSepBCG': Unit("Mpc/h", "phys.size.radius", "	Projected angular size distance (comoving/(1+z)) separation of the galaxy to the RA and Dec of the group `BCG` coordinates"),
+    'SepBCG': Unit("arcsec", "phys.angSize", "Projected angular separation of the galaxy to the RA and Dec of the group `BCG` coordinates"),
+    'AngSepBCG': Unit("Mpc/h", "phys.size.radius", "Projected angular size distance (comoving/(1+z)) separation of the galaxy to the RA and Dec of the group `BCG` coordinates"),
     'CoSepBCG': Unit("Mpc/h", "phys.size.radius", "Projected comoving distance separation of the galaxy to the RA and Dec of the group `BCG` coordinates"),
     'RankBCG': Unit("-", "-", "Relative rank of the galaxy to the RA and Dec of the group `BCG` coordinates, where 1 indicates closest and 2 second closest etc"),
     'SepIterCen': Unit("arcsec", "phys.angSize", "Projected angular separation of the galaxy to the RA and Dec of the group `IterCen` coordinates"),
@@ -78,7 +81,7 @@ galaxy_schema = {
     'AngSepCen': Unit("Mpc/h", "phys.size.radius", "Projected angular size distance (comoving/(1+z)) separation of the galaxy to the RA and Dec of the group `Cen` coordinates"),
     'CoSepCen': Unit("Mpc/h", "phys.size.radius", "Projected comoving distance separation of the galaxy to the RA and Dec of the group `Cen` coordinates"),
     'RankCen': Unit("-", "-", "Relative rank of the galaxy to the RA and Dec of the group `Cen` coordinates, where 1 indicates closest and 2 second closest etc"),
-    'GamaRegion': Unit("-", "-", "The GAMA region the galaxy is in."),
+    'GAMARegion': Unit("-", "-", "The GAMA region the galaxy is in."),
 }
 
 group_schema = {
@@ -107,7 +110,7 @@ group_schema = {
     "LumB": Unit("Lsun/h^2", "phys.luminosity", "TotFluxProxy times the global B factor required to get a median unbaised r-band luminosity estimate (B=1.04, see Robotham et al. 2011 section 4.4 for details)"),
     "MassAfunc": Unit("Msun/h", "phys.mass", "Mass proxy times the functional A factor which is a function of Nfof and IterCenZ (see Robotham et al. 2011 section 4.3 for details)"),
     "LumBfunc": Unit("Lsun/h^2", "phys.luminosity", "TotFluxProxy times the functional B factor which is a function of Nfof and IterCenZ (see Robotham et al. 2011 section 4.4 for details)"),
-    'GamaRegion': Unit("-", "-", "The GAMA region the galaxy is in.")
+    'GAMARegion': Unit("-", "-", "The GAMA region the galaxy is in.")
 }
 
 
@@ -121,5 +124,49 @@ pair_schema = {
     "MagSum": Unit("mag", "phot.mag", "Total r-band (petro) apparent magnitude of the pair"),
     "UberID1": Unit("-", "meta.id", "UberID of galaxy 2 in G3CGal"),
     "UberID2": Unit("-", "meta.id", "UberID of galaxy 2 in G3CGal"),
-    'GamaRegion': Unit("-", "-", "The GAMA region the galaxy is in.")
+    'GAMARegion': Unit("-", "-", "The GAMA region the galaxy is in.")
 }
+
+
+def create_par_file(schema: dict[str, Unit], dmu_name: str, file_name: str = f'gama_group_catalog_{VERSION}.par') -> None:
+    """
+    Writes the schema dictionary into a .par file with aligned columns.
+    """
+    # Extract all columns into lists so we can compute widths
+    keys = list(schema.keys())
+    indices = [str(i + 1) for i in range(len(keys))]
+    units = [u.unit for u in schema.values()]
+    ucds = [u.ucd for u in schema.values()]
+    descs = [u.description for u in schema.values()]
+
+    col_widths = [
+        max(len(k) for k in keys),
+        max(len(i) for i in indices),
+        max(len(u) for u in units),
+        max(len(ucd) for ucd in ucds),
+        max(len(desc) for desc in descs),
+    ]
+
+    with open(file_name, 'w', encoding='utf8') as file:
+        file.write("# GroupFinding\n")
+        file.write(f"# {dmu_name}\n")
+        file.write(f"# {VERSION}\n")
+        file.write(f"# {str(date.today())}\n")
+        file.write(f"# {NAME} <{EMAIL}>\n")
+        file.write("#\n")
+        file.write(f"# {ABS}")
+        file.write("#\n")
+        file.write("# See Lambert (2025) for more details.\n")
+        file.write("#\n")
+
+        for i, key in enumerate(keys):
+            unit = units[i]
+            ucd = ucds[i]
+            desc = descs[i]
+            file.write(
+                f"{key:<{col_widths[0]}}  "
+                f"{indices[i]:<{col_widths[1]}}  "
+                f"{unit:<{col_widths[2]}}  "
+                f"{ucd:<{col_widths[3]}}  "
+                f"{desc:<{col_widths[4]}}\n"
+            )
