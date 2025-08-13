@@ -17,6 +17,7 @@ MASS_FUNC_PARAMS = np.array([2.0, 17.9, 1.5])
 LUM_B = 1.04
 LUM_FUNC_PARAMS = np.array([0.65, -0.5, 0.22])
 SUN_MAG = 4.67
+SPEED_OF_LIGHT = 3e5 #km/s
 
 GROUP_ID_OFFSET = {"g09": 1e5, "g12": 2e5, "g15": 3e5, "g23": 5e5}
 

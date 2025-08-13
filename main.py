@@ -11,6 +11,8 @@ from nessie.helper_funcs import create_density_function
 import astropy.units as u
 from astropy.table import Table
 
+from transforms import convert_angular_to_physical_sep, make_ra_positive
+
 from units import (
     galaxy_schema,
     group_schema,
@@ -33,6 +35,7 @@ from config import (
     LUM_B,
     LUM_FUNC_PARAMS,
     AB_CUT,
+    SPEED_OF_LIGHT,
 )
 from luminosity_function import build_integrated_lf
 from separations import add_separation_metrics
@@ -64,12 +67,15 @@ def convert_jansky_to_apparent(janksy_array: np.ndarray[float]) -> np.ndarray[fl
     """
     return 2.5 * (23 - np.log10(janksy_array)) - 48.6
 
+
 class GamaField(Enum):
     """String representation of the GAMA fields"""
-    G09 = 'g09'
-    G12 = 'g12'
-    G15 = 'g15'
-    G23 = 'g23'
+
+    G09 = "g09"
+    G12 = "g12"
+    G15 = "g15"
+    G23 = "g23"
+
 
 def what_gama_field(ra_array: np.ndarray[float]) -> str:
     """
@@ -86,6 +92,7 @@ def what_gama_field(ra_array: np.ndarray[float]) -> str:
         if ra > 300:
             fields.append(GamaField.G23.value)
     return np.array(fields)
+
 
 def read_in_input_cats(
     catalog_name: str,
@@ -200,6 +207,7 @@ class Field:
             np.array(properties["bcg_idxs"])
         ]
         properties["field"] = what_gama_field(properties["iter_ra"])
+        properties['center_of_light_ras'] = make_ra_positive(properties['center_of_light_ras'])
         return properties
 
     def get_pair_dmu(self) -> pd.DataFrame:
@@ -213,7 +221,14 @@ class Field:
         pair_properties["uber_id_2"] = np.array(self.obs_df["UberID"])[
             np.array(pair_properties["idx_2"])
         ]
-        pair_properties['field'] = what_gama_field(pair_properties['ra_bar'])
+        pair_properties['ra_bar'] = make_ra_positive(pair_properties['ra_bar'])
+        pair_properties["field"] = what_gama_field(pair_properties["ra_bar"])
+        pair_properties["projected_separation"] = convert_angular_to_physical_sep(
+            np.array(pair_properties["projected_separation"]), pair_properties["redshift_bar"]
+        )
+        pair_properties['velocity_separation'] = pair_properties['velocity_separation'] * SPEED_OF_LIGHT
+        # Only allow velocity separations less than 1000 km/s
+        pair_properties = pair_properties[pair_properties['velocity_separation'] < 1000]
         return pair_properties
 
     def get_galaxy_dmu(self) -> pd.DataFrame:
@@ -225,11 +240,13 @@ class Field:
         new_dmu.loc[new_dmu["group_ids"] == 99999, "group_ids"] = (
             0  # zero for ungrouped.
         )
-        new_dmu["field"] = what_gama_field(new_dmu['RAcen'])
+        new_dmu["field"] = what_gama_field(new_dmu["RAcen"])
         return new_dmu
 
 
-def rename_and_select(final_dataframe: pd.DataFrame, schema_columns: list[str], renames: dict[str, str]) -> pd.DataFrame:
+def rename_and_select(
+    final_dataframe: pd.DataFrame, schema_columns: list[str], renames: dict[str, str]
+) -> pd.DataFrame:
     """
     Renames the dataframe to match the schema columns and only selects properties that are in the
     GAMA schema list.
@@ -237,7 +254,10 @@ def rename_and_select(final_dataframe: pd.DataFrame, schema_columns: list[str], 
     renamed_dataframe = final_dataframe.rename(columns=renames)
     return renamed_dataframe[schema_columns]
 
-def run_all_fields(fields = list[Field]) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+
+def run_all_fields(
+    fields=list[Field],
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Builds the combined group, galaxy and pair cats.
     """
@@ -249,6 +269,7 @@ def run_all_fields(fields = list[Field]) -> tuple[pd.DataFrame, pd.DataFrame, pd
         pair_dmus.append(field.get_pair_dmu())
         galaxy_dmus.append(field.get_galaxy_dmu())
     return pd.concat(group_dmus), pd.concat(pair_dmus), pd.concat(galaxy_dmus)
+
 
 if __name__ == "__main__":
     INPUT_CAT = "gama_catalogs/gama_input_galaxies.csv"
@@ -282,6 +303,6 @@ if __name__ == "__main__":
     galaxy_fits = Table.from_pandas(galaxies_dmu)
     pairs_fits = Table.from_pandas(pairs_dmu)
 
-    group_fits.write("G3CFoFGroup.fits")
-    galaxy_fits.write("G3CGal.fits")
-    pairs_fits.write("G3CGalPair.fits")
+    group_fits.write("G3CFoFGroup.fits", overwrite=True)
+    galaxy_fits.write("G3CGal.fits", overwrite=True)
+    pairs_fits.write("G3CGalPair.fits", overwrite=True)
