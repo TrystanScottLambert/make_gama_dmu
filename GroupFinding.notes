@@ -1,0 +1,58 @@
+This DMU provides the final GAMA Galaxy Group Catalogue (G3C) which includes the
+GAMA III equatorial and G23 survey regions. The G3C is one of the
+major data products of the GAMA project. At the most basic level it
+is a Friends-of-Friends (FoF) group catalogue that has been run on
+GAMA survey style mocks (put together by Peder Norberg and various
+collaborators in Durham) to test the quality of the grouping and then
+run on the real GAMA data in order to extract our best effort
+groups. This version of the group catalogue is built using the 
+"Nessie" group finder which implements the FoF algorithm.
+The details of the process are discussed extensively in
+Robotham et al. (2011) and Lambert et al. (2025). 
+
+This DMU necessarily produces several catalogues. Below we discuss the
+catalogues contained in the DMU. For most user purposes G3CGal and
+G3CFoFGroup will be the most useful catalogues.
+
+For all catalogues the null value is -999 unless otherwise stated in
+the column descriptions.
+
+The GroupFinding DMU has the following database dependencies:
+
+gkvScienceCat v02
+Randoms v02
+
+The exact selection of the galaxies used from gkvScienceCatv02 is:
+
+SELECT UberID,RAcen,Deccen,Z,flux_rl,NQ FROM gkvScienceCatv02 WHERE SC>6
+
+This is different to the selection used in versions <= v10 which relied on the old photometry.
+
+--------------------------------------------------------------------------
+
+GAMA Group Catalogue (G3C):
+
+G3CGal:
+List of all galaxies that were used for GAMA grouping. This catalogue
+also contains the group references for grouped galaxies. It also includes
+galaxy separations to different definitions of the G3C group centre.
+
+G3CFoFGroup:
+List of FoF group properties. The GroupID references in G3CGal link to
+this catalogue. Some properties such as the hull-calculations and image urls are no longer
+being provided. This catalogue contains the core properties.
+
+G3CGalPair:
+List of all galaxy pairs with a projected physical separation of
+100 kpc/h and a velocity separation of 1,000 km/s. Note that
+G3CGalPair is a pair catalogue that lists each pair only once. It is
+quite arbitrary which galaxy is listed first, so be careful to check
+both CATAID columns for a galaxy of interest.
+
+--------------------------------------------------------------------------
+
+G3C Mock catalogues:
+The G3C mock catalogues will soon be updated to a newer version of the
+GAMA mocks which will then also encompass the full volumes of the GAMA II
+equatorial and G02 regions. As such the present version of the DMU
+does not contain the mock groups.

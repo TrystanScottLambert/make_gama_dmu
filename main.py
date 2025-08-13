@@ -9,6 +9,7 @@ import numpy as np
 from nessie import RedshiftCatalog
 from nessie.helper_funcs import create_density_function
 import astropy.units as u
+from astropy.table import Table
 
 from units import (
     galaxy_schema,
@@ -275,3 +276,12 @@ if __name__ == "__main__":
     groups_dmu = rename_and_select(groups, group_schema.keys(), renames_groups)
     galaxies_dmu = rename_and_select(galaxies, galaxy_schema.keys(), renames_galaxies)
     pairs_dmu = rename_and_select(pairs, pair_schema.keys(), renames_pairs)
+
+    print("Converting to fits tables")
+    group_fits = Table.from_pandas(groups_dmu)
+    galaxy_fits = Table.from_pandas(galaxies_dmu)
+    pairs_fits = Table.from_pandas(pairs_dmu)
+
+    group_fits.write("G3CFoFGroup.fits")
+    galaxy_fits.write("G3CGal.fits")
+    pairs_fits.write("G3CGalPair.fits")
