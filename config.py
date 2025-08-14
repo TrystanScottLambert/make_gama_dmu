@@ -6,8 +6,8 @@ from nessie import FlatCosmology
 from astropy.cosmology import FlatLambdaCDM
 import numpy as np
 
-cosmo = FlatCosmology(0.7, 0.3)
-astropy_cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+cosmo = FlatCosmology(1.0, 0.25)
+astropy_cosmo = FlatLambdaCDM(H0=100, Om0=0.25)
 OVERFACTOR = 400  # The factor the randoms were expanded.
 B0, R0 = 0.06, 32
 APPARENT_MAG_LIM = 19.65
