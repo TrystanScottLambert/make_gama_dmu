@@ -12,9 +12,9 @@ UberID         1   -             meta.id;meta.main            Unique GAMA III ID
 RAcen          2   deg           pos.eq.ra                    Right Ascension of flux-weighted centre (ICRS)                                                                                          
 Deccen         3   deg           pos.eq.dec                   Declination of flux-weighted centre (ICRS)                                                                                              
 Z              4   -             src.redshift                 Spectroscopic redshift                                                                                                                  
-flux_rl        5   Jy            phot.flux.density;em.opt.R   Total flux (r band) - using global sky subtraction                                                                                      
+flux_rt        5   Jy            phot.flux.density;em.opt.R   Total flux (r band) - using global sky subtraction                                                                                      
 NQ             6   -             meta.code.qual;src.redshift  Normalised redshift quality                                                                                                             
-ApparentMagR   7   mag           phot.mag                     Apparent magnitude derived using the r-band flux[Jy], with local sky subtraction 'flux_rl' (m_r = 2.5 * (23 - np.log10(flux_rl)) - 48.6)
+ApparentMagR   7   mag           phot.mag                     Apparent magnitude derived using the r-band flux[Jy], with local sky subtraction 'flux_rt' (m_r = 2.5 * (23 - np.log10(flux_rt)) - 48.6)
 AbsoluteMagR   8   mag -5log(h)  phot.mag                     the k+e corrected absolute magnitude derived from the apparent magnitude using the distance modulus assuming a 737 cosmology.           
 GroupID        9   -             meta.id                      GroupID for this galaxy in G3CFoFGroup, 0 is un-grouped                                                                                 
 SepBCG         10  arcsec        phys.angSize                 Projected angular separation of the galaxy to the RA and Dec of the group `BCG` coordinates                                             

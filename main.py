@@ -135,8 +135,10 @@ class Field:
     name: str
 
     def __post_init__(self):
-        obs_df = self.input_data_frame[self.input_data_frame["NQ"] > 2]
-        obs_df["apparent_mags"] = convert_jansky_to_apparent(obs_df["flux_rl"])
+        obs_df = self.input_data_frame[
+            (self.input_data_frame["NQ"] > 2)
+            ]
+        obs_df["apparent_mags"] = convert_jansky_to_apparent(obs_df["flux_rt"])
         obs_df["absolute_mags"] = (
             obs_df["apparent_mags"]
             - cosmo.dist_mod(obs_df["Z"])

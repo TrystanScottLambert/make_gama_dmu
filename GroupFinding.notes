@@ -24,10 +24,13 @@ Randoms v02
 
 The exact selection of the galaxies used from gkvScienceCatv02 is:
 
-SELECT UberID,RAcen,Deccen,Z,flux_rl,NQ FROM gkvScienceCatv02 WHERE SC>6
+SELECT UberID,RAcen,Deccen,Z,flux_rt,NQ FROM gkvScienceCatv02 WHERE SC>6
 
 This is different to the selection used in versions <= v10 which relied on the old photometry.
 
+The entire pipeline from data selection, group finding, and formatting into these tables can be 
+found at https://github.com/TrystanScottLambert/make_gama_dmu and is tagged with the various stages
+of submission ('submitted', 'acepted', 'published')
 --------------------------------------------------------------------------
 
 GAMA Group Catalogue (G3C):
@@ -47,12 +50,10 @@ List of all galaxy pairs with a projected physical separation of
 100 kpc/h and a velocity separation of 1,000 km/s. Note that
 G3CGalPair is a pair catalogue that lists each pair only once. It is
 quite arbitrary which galaxy is listed first, so be careful to check
-both CATAID columns for a galaxy of interest.
+both UberID columns for a galaxy of interest. These are also all present in the
+G3CFoFGroup under the same GroupID.
 
 --------------------------------------------------------------------------
 
 G3C Mock catalogues:
-The G3C mock catalogues will soon be updated to a newer version of the
-GAMA mocks which will then also encompass the full volumes of the GAMA II
-equatorial and G02 regions. As such the present version of the DMU
-does not contain the mock groups.
+These were the Galform mocks used throughout all the previous verisons of the group finder.
