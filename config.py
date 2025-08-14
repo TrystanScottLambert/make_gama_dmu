@@ -10,7 +10,7 @@ cosmo = FlatCosmology(1.0, 0.25)
 astropy_cosmo = FlatLambdaCDM(H0=100, Om0=0.25)
 OVERFACTOR = 400  # The factor the randoms were expanded.
 B0, R0 = 0.06, 32
-APPARENT_MAG_LIM = 19.65
+APPARENT_MAG_LIM = 19.8
 AB_CUT = -10
 MASS_A = 10
 MASS_FUNC_PARAMS = np.array([2.0, 17.9, 1.5])

@@ -21,7 +21,6 @@ def build_integrated_lf(path: str = "gama_lf/lf.dat", cut: float = -14) -> inter
         interp1d: Interpolation function over the integrated phi(L) from -30 to M.
     """
     df = pd.read_csv(path, delim_whitespace=True)
-
     df = df[df["mag_bin_centre"] < cut].copy()
 
     mags = df["mag_bin_centre"].values
@@ -31,7 +30,7 @@ def build_integrated_lf(path: str = "gama_lf/lf.dat", cut: float = -14) -> inter
     phi_lum = phi * 10 ** (-0.4 * mags)
 
     # Interpolation of φ(L)
-    func_lum = interp1d(mags, phi_lum, bounds_error=False, fill_value="extrapolate")
+    func_lum = interp1d(mags, phi_lum,bounds_error=False,fill_value=(phi_lum[0], phi_lum[-1]))
 
     # Integrate from -30 to each M
     integrals = np.array([
@@ -46,7 +45,8 @@ def build_integrated_lf(path: str = "gama_lf/lf.dat", cut: float = -14) -> inter
     min_val = positive.min()
     integrals[integrals == 0] = min_val
 
-    return interp1d(mags, integrals, bounds_error=False, fill_value="extrapolate")
+    return interp1d(mags, integrals, bounds_error=False, fill_value=(integrals[0], integrals[-1]))
+
 
 if __name__ == '__main__':
-    function = build_integrated_lf()
+    func = build_integrated_lf()

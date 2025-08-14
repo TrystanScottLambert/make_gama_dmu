@@ -187,7 +187,7 @@ class Field:
         properties["lum_corrected_flux"] = properties["flux_proxies"] * lum_factor
         properties["MassA"] = properties["lum_corrected_mass"] * MASS_A
         properties["LumB"] = (
-            properties["lum_corrected_flux"] * LUM_B * 10 ** (0.4 * SUN_MAG)
+            properties["lum_corrected_flux"] * LUM_B
         )
         properties["MassAfunc"] = properties[
             "lum_corrected_mass"

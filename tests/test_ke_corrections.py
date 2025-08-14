@@ -25,3 +25,6 @@ class KETest(unittest.TestCase):
             2.426494,
         ]
         npt.assert_almost_equal(result, ans, decimal=4)
+
+if __name__ == '__main__':
+    unittest.main()
