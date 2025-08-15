@@ -10,6 +10,7 @@ from nessie import RedshiftCatalog
 from nessie.helper_funcs import create_density_function
 import astropy.units as u
 from astropy.table import Table
+import pylab as plt
 
 from transforms import convert_angular_to_physical_sep, make_ra_positive
 
@@ -29,7 +30,6 @@ from config import (
     OVERFACTOR,
     B0,
     R0,
-    SUN_MAG,
     MASS_A,
     MASS_FUNC_PARAMS,
     LUM_B,
@@ -135,9 +135,7 @@ class Field:
     name: str
 
     def __post_init__(self):
-        obs_df = self.input_data_frame[
-            (self.input_data_frame["NQ"] > 2)
-            ]
+        obs_df = self.input_data_frame[(self.input_data_frame["NQ"] > 2)]
         obs_df["apparent_mags"] = convert_jansky_to_apparent(obs_df["flux_rt"])
         obs_df["absolute_mags"] = (
             obs_df["apparent_mags"]
@@ -178,17 +176,18 @@ class Field:
                 self.obs_df["absolute_mags"], vel_errors
             )
         )
-        group_ob_limit = APPARENT_MAG_LIM - cosmo.dist_mod(
-            properties["median_redshift"]
+        group_ob_limit = (
+            APPARENT_MAG_LIM
+            - cosmo.dist_mod(properties["median_redshift"])
+            - calc_ke_correction(properties["median_redshift"])
         )
         int_function = build_integrated_lf()
+
         lum_factor = int_function(AB_CUT) / int_function(group_ob_limit)
-        properties["lum_corrected_mass"] = properties["mass_proxy"] * lum_factor
-        properties["lum_corrected_flux"] = properties["flux_proxies"] * lum_factor
+        properties["lum_corrected_mass"] = properties["mass_proxy"] * lum_factor / 25.645
+        properties["lum_corrected_flux"] = properties["flux_proxies"] * lum_factor / 1250.
         properties["MassA"] = properties["lum_corrected_mass"] * MASS_A
-        properties["LumB"] = (
-            properties["lum_corrected_flux"] * LUM_B
-        )
+        properties["LumB"] = properties["lum_corrected_flux"] * LUM_B
         properties["MassAfunc"] = properties[
             "lum_corrected_mass"
         ] * functional_correction(
@@ -209,7 +208,9 @@ class Field:
             np.array(properties["bcg_idxs"])
         ]
         properties["field"] = what_gama_field(properties["iter_ra"])
-        properties['center_of_light_ras'] = make_ra_positive(properties['center_of_light_ras'])
+        properties["center_of_light_ras"] = make_ra_positive(
+            properties["center_of_light_ras"]
+        )
         return properties
 
     def get_pair_dmu(self) -> pd.DataFrame:
@@ -223,14 +224,17 @@ class Field:
         pair_properties["uber_id_2"] = np.array(self.obs_df["UberID"])[
             np.array(pair_properties["idx_2"])
         ]
-        pair_properties['ra_bar'] = make_ra_positive(pair_properties['ra_bar'])
+        pair_properties["ra_bar"] = make_ra_positive(pair_properties["ra_bar"])
         pair_properties["field"] = what_gama_field(pair_properties["ra_bar"])
         pair_properties["projected_separation"] = convert_angular_to_physical_sep(
-            np.array(pair_properties["projected_separation"]), pair_properties["redshift_bar"]
+            np.array(pair_properties["projected_separation"]),
+            pair_properties["redshift_bar"],
         )
-        pair_properties['velocity_separation'] = pair_properties['velocity_separation'] * SPEED_OF_LIGHT
+        pair_properties["velocity_separation"] = (
+            pair_properties["velocity_separation"] * SPEED_OF_LIGHT
+        )
         # Only allow velocity separations less than 1000 km/s
-        pair_properties = pair_properties[pair_properties['velocity_separation'] < 1000]
+        pair_properties = pair_properties[pair_properties["velocity_separation"] < 1000]
         return pair_properties
 
     def get_galaxy_dmu(self) -> pd.DataFrame:
@@ -239,9 +243,7 @@ class Field:
         new_dmu["group_ids"] = np.array(
             self.redshift_catalog.group_ids + GROUP_ID_OFFSET[self.name]
         ).astype(int)
-        new_dmu.loc[new_dmu["group_ids"] == 99999, "group_ids"] = (
-            0  # zero for ungrouped.
-        )
+        new_dmu.loc[new_dmu["group_ids"] == 99999, "group_ids"] = 0
         new_dmu["field"] = what_gama_field(new_dmu["RAcen"])
         return new_dmu
 
