@@ -27,7 +27,6 @@ def bin_data(array_1: np.ndarray, array_2: np.ndarray, title: str) -> None:
     bins = np.linspace(np.min(array_2), np.max(array_2), n_bin)
     plt.hist(array_1, bins=bins, density=True, histtype="step")
     plt.hist(array_2, bins=bins, density=True, histtype="step")
-    plt.yscale('log')
     plt.title(title)
     plt.show()
 

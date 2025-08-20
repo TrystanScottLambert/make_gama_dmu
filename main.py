@@ -10,7 +10,6 @@ from nessie import RedshiftCatalog
 from nessie.helper_funcs import create_density_function
 import astropy.units as u
 from astropy.table import Table
-import pylab as plt
 
 from transforms import convert_angular_to_physical_sep, make_ra_positive
 
@@ -184,8 +183,8 @@ class Field:
         int_function = build_integrated_lf()
 
         lum_factor = int_function(AB_CUT) / int_function(group_ob_limit)
-        properties["lum_corrected_mass"] = properties["mass_proxy"] * lum_factor / 25.645
-        properties["lum_corrected_flux"] = properties["flux_proxies"] * lum_factor / 1250.
+        properties["lum_corrected_mass"] = properties["mass_proxy"] * lum_factor
+        properties["lum_corrected_flux"] = properties["flux_proxies"] * lum_factor
         properties["MassA"] = properties["lum_corrected_mass"] * MASS_A
         properties["LumB"] = properties["lum_corrected_flux"] * LUM_B
         properties["MassAfunc"] = properties[
