@@ -1,0 +1,20 @@
+# GroupFinding
+# G3Cv11
+# v11
+# 2025-10-08
+# Trystan Lambert <trystan.lambert@uwa.edu.au>
+#
+# Galaxy groups for the G09, G12, G15, and G23 regions.
+# Groups built using Nessie and new GAMA III photometry based on profound (gkInputCat)#
+# See Lambert (2025) for more details.
+#
+PairID      1   -      meta.id;meta.main  Unique paid ID (Same as GroupID)                                         
+SepProjAng  2   kpc/h  pos.distance       Physical projected separation between galaxy 1 and galaxy 2              
+SepVel      3   km/s   phys.veloc         Velocity separation of galaxy 1 and galaxy 2                             
+RAbar       4   deg    pos.eq.ra          RA of the r-band (petro) flux weighted centre-of-light of the pair       
+Decbar      5   deg    pos.eq.dec         Dec of the r-band (petro) flux weighted centre-of-light of the pair      
+Zbar        6   -      src.redshift       	Redshift of the r-band (petro) flux weighted centre-of-light of the pair
+MagSum      7   mag    phot.mag           Total r-band (petro) apparent magnitude of the pair                      
+UberID1     8   -      meta.id            UberID of galaxy 2 in G3CGal                                             
+UberID2     9   -      meta.id            UberID of galaxy 2 in G3CGal                                             
+GAMARegion  10  -      -                  The GAMA region the galaxy is in.                                        

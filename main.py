@@ -12,6 +12,7 @@ import astropy.units as u
 from astropy.table import Table
 
 from transforms import convert_angular_to_physical_sep, make_ra_positive
+from units import create_par_file, pair_schema, group_schema, galaxy_schema
 
 from units import (
     galaxy_schema,
@@ -309,3 +310,7 @@ if __name__ == "__main__":
     group_fits.write("G3CFoFGroup.fits", overwrite=True)
     galaxy_fits.write("G3CGal.fits", overwrite=True)
     pairs_fits.write("G3CGalPair.fits", overwrite=True)
+
+    create_par_file(group_schema, "G3Cv11", file_name="group_v11.par")
+    create_par_file(pair_schema, "G3Cv11", file_name="pairs_v11.par")
+    create_par_file(galaxy_schema, "G3Cv11", file_name="galaxy_v11.par")
