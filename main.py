@@ -114,7 +114,7 @@ def read_in_input_cats(
 
 def calc_ke_correction(redshifts: np.ndarray[float]):
     """
-    calculates the k+e correction for a given redshifts
+    Calculates the k+e correction for given redshifts.
     """
     redshift = np.asarray(redshifts)
     kcorrvals = np.array([0.20848, 1.0226, 0.52366, 3.5902, 2.3843])
@@ -184,12 +184,11 @@ class Field:
         int_function = build_integrated_lf()
 
         lum_factor = int_function(AB_CUT) / int_function(group_ob_limit)
-        properties["lum_corrected_mass"] = properties["mass_proxy"] * lum_factor
         properties["lum_corrected_flux"] = properties["flux_proxies"] * lum_factor
-        properties["MassA"] = properties["lum_corrected_mass"] * MASS_A
+        properties["MassA"] = properties["mass_proxy"] * MASS_A
         properties["LumB"] = properties["lum_corrected_flux"] * LUM_B
         properties["MassAfunc"] = properties[
-            "lum_corrected_mass"
+            "mass_proxy"
         ] * functional_correction(
             properties["multiplicity"], properties["median_redshift"], MASS_FUNC_PARAMS
         )
