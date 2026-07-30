@@ -15,9 +15,6 @@ from transforms import convert_angular_to_physical_sep, make_ra_positive
 from units import create_par_file, pair_schema, group_schema, galaxy_schema
 
 from units import (
-    galaxy_schema,
-    group_schema,
-    pair_schema,
     renames_galaxies,
     renames_pairs,
     renames_groups,
@@ -187,9 +184,7 @@ class Field:
         properties["lum_corrected_flux"] = properties["flux_proxies"] * lum_factor
         properties["MassA"] = properties["mass_proxy"] * MASS_A
         properties["LumB"] = properties["lum_corrected_flux"] * LUM_B
-        properties["MassAfunc"] = properties[
-            "mass_proxy"
-        ] * functional_correction(
+        properties["MassAfunc"] = properties["mass_proxy"] * functional_correction(
             properties["multiplicity"], properties["median_redshift"], MASS_FUNC_PARAMS
         )
         properties["LumBfunc"] = properties[
