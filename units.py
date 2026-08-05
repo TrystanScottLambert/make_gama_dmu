@@ -30,7 +30,7 @@ renames_groups = {
     "rsigma": "Rad1Sig",
     "velocity_dispersion_gap": "VelDisp",
     "velocity_dispersion_gap_err": "VelDispErr",
-    "lum_corrected_mass": "MassProxy",
+    "mass_proxy": "MassProxy",
     "lum_corrected_flux": "TotFluxProxy",
     "bcg_uber_id": "BCGUberID",
     "bcg_ras": "BCGRA",
