@@ -30,13 +30,14 @@ def build_integrated_lf(path: str = "gama_lf/lf.dat", cut: float = -14) -> inter
     phi_lum = phi * 10 ** (-0.4 * mags)
 
     # Interpolation of φ(L)
-    func_lum = interp1d(mags, phi_lum,bounds_error=False,fill_value=(phi_lum[0], phi_lum[-1]))
+    func_lum = interp1d(
+        mags, phi_lum, bounds_error=False, fill_value=(phi_lum[0], phi_lum[-1])
+    )
 
     # Integrate from -30 to each M
-    integrals = np.array([
-        quad(func_lum, -30, M, limit=1000)[0] if np.isfinite(M) else 0.0
-        for M in mags
-    ])
+    integrals = np.array(
+        [quad(func_lum, -30, M, limit=1000)[0] if np.isfinite(M) else 0.0 for M in mags]
+    )
 
     # Replace zeros with min positive value
     positive = integrals[integrals > 0]
@@ -45,8 +46,11 @@ def build_integrated_lf(path: str = "gama_lf/lf.dat", cut: float = -14) -> inter
     min_val = positive.min()
     integrals[integrals == 0] = min_val
 
-    return interp1d(mags, integrals, bounds_error=False, fill_value=(integrals[0], integrals[-1]))
+    return interp1d(
+        mags, integrals, bounds_error=False, fill_value=(integrals[0], integrals[-1])
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     func = build_integrated_lf()
+

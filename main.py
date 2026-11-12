@@ -4,38 +4,41 @@ Main script for building the GAMA Group Catalog
 
 from dataclasses import dataclass
 from enum import Enum
-import pandas as pd
+
+import astropy.units as u
 import numpy as np
+import pandas as pd
+from astropy.table import Table
 from nessie import RedshiftCatalog
 from nessie.helper_funcs import create_density_function
-import astropy.units as u
-from astropy.table import Table
 
-from transforms import convert_angular_to_physical_sep, make_ra_positive
-from units import create_par_file, pair_schema, group_schema, galaxy_schema
-
-from units import (
-    renames_galaxies,
-    renames_pairs,
-    renames_groups,
-)
 from config import (
-    cosmo,
-    astropy_cosmo,
-    GROUP_ID_OFFSET,
+    AB_CUT,
     APPARENT_MAG_LIM,
-    OVERFACTOR,
     B0,
-    R0,
-    MASS_A,
-    MASS_FUNC_PARAMS,
+    GROUP_ID_OFFSET,
     LUM_B,
     LUM_FUNC_PARAMS,
-    AB_CUT,
+    MASS_A,
+    MASS_FUNC_PARAMS,
+    OVERFACTOR,
+    R0,
     SPEED_OF_LIGHT,
+    astropy_cosmo,
+    cosmo,
 )
 from luminosity_function import build_integrated_lf
 from separations import add_separation_metrics
+from transforms import convert_angular_to_physical_sep, make_ra_positive
+from units import (
+    create_par_file,
+    galaxy_schema,
+    group_schema,
+    pair_schema,
+    renames_galaxies,
+    renames_groups,
+    renames_pairs,
+)
 
 
 def functional_correction(
@@ -132,7 +135,7 @@ class Field:
     name: str
 
     def __post_init__(self):
-        obs_df = self.input_data_frame[(self.input_data_frame["NQ"] > 2)]
+        obs_df = self.input_data_frame
         obs_df["apparent_mags"] = convert_jansky_to_apparent(obs_df["flux_rt"])
         obs_df["absolute_mags"] = (
             obs_df["apparent_mags"]
@@ -140,7 +143,13 @@ class Field:
             - calc_ke_correction(obs_df["Z"])
         )
 
-        randoms = np.loadtxt(f"randoms/gama_{self.name}_randoms.txt", skiprows=1)
+        randoms = np.loadtxt(
+            f"randoms/gama_{self.name}_randoms.csv",
+            skiprows=1,
+            usecols=(0),
+            unpack=True,
+            delimiter=",",
+        )
         rho = create_density_function(
             randoms, len(randoms) / OVERFACTOR, self.fractional_area, cosmo
         )

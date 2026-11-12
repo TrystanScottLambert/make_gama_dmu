@@ -1,0 +1,21 @@
+[project]
+name = "make-gama-dmu"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "astropy>=8.0.1",
+    "ipython>=9.18.1",
+    "matplotlib>=3.11.2",
+    "nessie-py>=1.1.1",
+    "pandas>=3.0.6",
+    "polars>=1.44.2",
+]
+
+[project.scripts]
+make-gama-dmu = "make_gama_dmu:main"
+
+[build-system]
+requires = ["uv_build>=0.12.15,<0.13.0"]
+build-backend = "uv_build"
