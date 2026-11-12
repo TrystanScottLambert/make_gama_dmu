@@ -20,7 +20,7 @@ def build_integrated_lf(path: str = "gama_lf/lf.dat", cut: float = -14) -> inter
     Returns:
         interp1d: Interpolation function over the integrated phi(L) from -30 to M.
     """
-    df = pd.read_csv(path, delim_whitespace=True)
+    df = pd.read_csv(path, delimiter=r"\s+")
     df = df[df["mag_bin_centre"] < cut].copy()
 
     mags = df["mag_bin_centre"].values
@@ -53,4 +53,3 @@ def build_integrated_lf(path: str = "gama_lf/lf.dat", cut: float = -14) -> inter
 
 if __name__ == "__main__":
     func = build_integrated_lf()
-
