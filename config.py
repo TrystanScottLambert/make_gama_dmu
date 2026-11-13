@@ -8,7 +8,7 @@ import numpy as np
 
 cosmo = FlatCosmology(1.0, 0.25)
 astropy_cosmo = FlatLambdaCDM(H0=100, Om0=0.25)
-OVERFACTOR = 400  # The factor the randoms were expanded.
+OVERFACTOR = 100  # The factor the randoms were expanded (randoms/*.csv: ~100 clones per galaxy).
 B0, R0 = 0.06, 32
 APPARENT_MAG_LIM = 19.65
 AB_CUT = -10
